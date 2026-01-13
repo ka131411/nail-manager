@@ -29,7 +29,7 @@ if st.button("인스타 글 생성하기 ✨", type="primary"):
     else:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
             prompt = f"""
             당신은 10년 차 뷰티 마케터입니다. 아래 정보를 바탕으로 인스타그램 피드 글을 작성해주세요.
@@ -51,4 +51,5 @@ if st.button("인스타 글 생성하기 ✨", type="primary"):
                 st.text_area("결과물", response.text, height=400)
                 
         except Exception as e:
+
             st.error(f"오류가 발생했습니다: {e}")
