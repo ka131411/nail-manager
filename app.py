@@ -21,15 +21,15 @@ with col1:
 with col2:
     points = st.text_area("강조할 점", placeholder="예: 유지력 좋음, 실물 깡패, 이달의 아트 할인")
 
-# 4. '직통' AI 생성 로직 (라이브러리 미사용)
+# 4. '직통' AI 생성 로직 (호환성 개선 버전)
 if st.button("인스타 글 생성하기 ✨", type="primary"):
     if not api_key:
         st.error("API 키를 먼저 입력해주세요!")
     elif not keywords:
         st.warning("키워드를 입력해주세요!")
     else:
-        # 여기가 핵심! 도구를 거치지 않고 바로 구글 서버로 보냅니다.
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        # [수정됨] 모델을 가장 안정적인 'gemini-pro'로 변경했습니다.
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
         headers = {'Content-Type': 'application/json'}
         data = {
             "contents": [{
@@ -55,12 +55,16 @@ if st.button("인스타 글 생성하기 ✨", type="primary"):
             try:
                 response = requests.post(url, headers=headers, json=data)
                 
+                # 결과 처리
                 if response.status_code == 200:
                     result = response.json()
-                    # 결과에서 텍스트만 쏙 뽑아냅니다.
-                    text = result['candidates'][0]['content']['parts'][0]['text']
-                    st.success("작성 완료! 복사해서 사용하세요.")
-                    st.text_area("결과물", text, height=400)
+                    # 텍스트 추출 (안전 장치 추가)
+                    if 'candidates' in result and result['candidates']:
+                        text = result['candidates'][0]['content']['parts'][0]['text']
+                        st.success("작성 완료! 복사해서 사용하세요.")
+                        st.text_area("결과물", text, height=400)
+                    else:
+                        st.error("AI가 답변을 생성하지 못했습니다. (내용이 정책에 위배될 수 있음)")
                 else:
                     st.error(f"오류가 발생했습니다: {response.text}")
             except Exception as e:
