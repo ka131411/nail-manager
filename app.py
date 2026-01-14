@@ -46,7 +46,7 @@ if st.button("인스타 감성 문구 생성하기 🚀", type="primary", use_co
         5. 유입이 잘 되는 핵심 해시태그 7개를 마지막에 포함
         """
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
         headers = {'Content-Type': 'application/json'}
         data = {"contents": [{"parts": [{"text": prompt}]}]}
 
@@ -68,3 +68,4 @@ if st.button("인스타 감성 문구 생성하기 🚀", type="primary", use_co
 # 하단 정보
 st.markdown("---")
 st.caption("© 2026 유니픽스 네일 매니저 AI | 피드백은 언제나 환영입니다! ✨")
+
