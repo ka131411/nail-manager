@@ -4,86 +4,67 @@ import json
 
 # 1. 페이지 설정
 st.set_page_config(page_title="네일 매니저 AI", page_icon="💅")
-st.title("💅 네일샵 원장님 전용 AI 비서")
-st.caption("사장님을 위해 제가 미리 결제해뒀어요! 무료로 맘껏 쓰세요. 🎁")
 
-# 2. 비밀 금고에서 키 가져오기 (오류 방지)
+# 2. 디자인 및 상단 꾸미기
+st.title("💅 네일샵 원장님 전용 AI 비서")
+st.markdown("---")
+st.caption("사장님들을 위해 제가 미리 결제해뒀어요! 무료로 맘껏 쓰세요. 🎁")
+
+# 3. 비밀 금고(Secrets)에서 사장님 키 가져오기
 try:
     api_key = st.secrets["GOOGLE_API_KEY"]
 except:
-    # 혹시 키 설정이 안 되어있을 경우를 대비해 입력창을 띄워줌
-    with st.sidebar:
-        api_key = st.text_input("API 키가 설정되지 않았습니다. 직접 입력하세요.", type="password")
+    st.sidebar.error("비밀 금고(Secrets) 설정을 확인해주세요!")
+    st.stop()
 
-# 3. 입력 화면
+# 4. 입력 화면 구성
 col1, col2 = st.columns(2)
 with col1:
-    keywords = st.text_area("디자인 키워드", placeholder="예: 자석젤, 겨울왕국, 웨딩네일")
+    keywords = st.text_area("✨ 어떤 디자인인가요?", placeholder="예: 자석젤, 얼음네일, 실버파츠", height=100)
 with col2:
-    points = st.text_area("강조할 점", placeholder="예: 유지력 깡패, 실물 갑, 이달의 아트")
+    points = st.text_area("💎 강조하고 싶은 점은?", placeholder="예: 유지력 깡패, 실물 갑, 선착순 할인", height=100)
 
-# 4. AI 생성 로직
-if st.button("인스타 글 생성하기 ✨", type="primary"):
+# 5. AI 생성 로직
+if st.button("인스타 감성 문구 생성하기 🚀", type="primary", use_container_width=True):
     if not keywords:
-        st.warning("어떤 디자인인지 키워드는 알려주세요!")
+        st.warning("디자인 키워드를 입력해주셔야 제가 글을 써드려요! 🥺")
     else:
-        # 4-1. 여기가 핵심! AI에게 '연기 지도'를 시킵니다.
+        # AI 연기 지도 (말투 설정)
         prompt = f"""
-        당신은 인스타그램에서 소통 잘하기로 유명한 '감성 네일샵 원장님'입니다.
-        아래 정보를 바탕으로 인스타그램 피드 글을 작성해주세요.
+        당신은 인스타그램에서 소통을 잘하는 10년 차 센스 있는 네일샵 원장님입니다. 
+        아래 정보를 바탕으로 손님들이 '예약문의'를 하고 싶게끔 매력적인 피드 글을 써주세요.
         
         [정보]
         - 디자인: {keywords}
         - 특징: {points}
         
-        [말투 가이드 - 아주 중요!]
-        1. 기계적인 말투(~합니다, ~습니다) 절대 금지! ❌
-        2. 친한 언니나 동생에게 말하듯 부드러운 '해요체'(~에요, ~했어요)를 쓰세요. ⭕
-        3. 문장 사이사이에 이모지(✨, 💅, 💖, 🥺)를 자연스럽게 섞어주세요.
-        4. 감탄사(와.., 진짜, 대박)를 적절히 써서 '찐' 후기처럼 보이게 하세요.
-        
-        [작성 양식]
-        - 첫 줄: 시선을 끄는 감성 제목
-        - 본문: 공백 포함 3~4줄 (가독성 좋게 줄바꿈 필수)
-        - 마무리: 예약 문의 유도 (DM, 프로필 링크 등)
-        - 해시태그: 유입 잘되는 태그 5~7개
+        [가이드라인]
+        1. 첫 문장은 시선을 확 끄는 감성적인 문구로 시작 (이모지 활용)
+        2. 말투는 '~했어요', '~에요' 같은 다정하고 부드러운 말투 사용
+        3. 기계적인 느낌 절대 금지! 찐 후기나 일상 공유 같은 자연스러운 흐름
+        4. 중간중간 가독성 좋게 줄바꿈(엔터) 필수
+        5. 유입이 잘 되는 핵심 해시태그 7개를 마지막에 포함
         """
 
-       from google import genai
-with st.spinner("AI가 감성 충전 중입니다... 💖"):
-    try:
-        # 1️⃣ Gemini 클라이언트 생성
-        client = genai.Client(api_key=api_key)
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        headers = {'Content-Type': 'application/json'}
+        data = {"contents": [{"parts": [{"text": prompt}]}]}
 
-        # 2️⃣ 사용 가능한 Flash 모델 자동 선택
-        model_name = None
-        models = [m.name for m in client.models.list()]
+        with st.spinner("사장님의 감성을 AI가 열공하는 중... ✍️"):
+            try:
+                response = requests.post(url, headers=headers, json=data)
+                if response.status_code == 200:
+                    result = response.json()
+                    final_text = result['candidates'][0]['content']['parts'][0]['text']
+                    
+                    st.success("작성 완료! 아래 박스 오른쪽 위의 버튼을 눌러 복사하세요! 👇")
+                    # 복사하기 편하도록 st.code 사용
+                    st.code(final_text, language=None)
+                else:
+                    st.error("구글 서버가 잠시 바쁘네요. 10초 뒤에 다시 시도해주세요!")
+            except Exception as e:
+                st.error("연결 중 문제가 생겼어요. 새로고침 후 다시 해주세요!")
 
-        for name in [
-            "gemini-1.5-flash",
-            "gemini-1.5-flash-latest",
-            "gemini-1.5-flash-002",
-            "gemini-2.0-flash"
-        ]:
-            if name in models:
-                model_name = name
-                break
-
-        if not model_name:
-            raise RuntimeError(f"사용 가능한 Flash 모델이 없습니다. 현재 모델: {models}")
-
-        # 3️⃣ 콘텐츠 생성
-        response = client.models.generate_content(
-            model=model_name,
-            contents=prompt
-        )
-
-        text = response.text
-
-        st.success("작성 완료! 오른쪽 위 아이콘을 눌러 복사하세요 👇")
-        st.code(text, language=None)
-
-    except Exception as e:
-        st.error("❌ Gemini 호출 중 오류가 발생했습니다.")
-        st.code(str(e))
-        raise
+# 하단 정보
+st.markdown("---")
+st.caption("© 2026 유니픽스 네일 매니저 AI | 피드백은 언제나 환영입니다! ✨")
