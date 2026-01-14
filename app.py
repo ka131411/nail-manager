@@ -19,9 +19,9 @@ except:
 # 4. 입력 화면 구성
 col1, col2 = st.columns(2)
 with col1:
-    keywords = st.text_area("✨ 어떤 디자인인가요?", placeholder="예: 자석젤, 얼음네일, 실버파츠", height=100)
+    design_keywords = st.text_area("✨ 어떤 디자인인가요?", placeholder="예: 자석젤, 얼음네일, 실버파츠", height=100)
 with col2:
-    points = st.text_area("💎 강조하고 싶은 점은?", placeholder="예: 유지력 깡패, 실물 갑, 선착순 할인", height=100)
+    highlight_points = st.text_area("💎 강조하고 싶은 점은?", placeholder="예: 유지력 깡패, 실물 갑, 선착순 할인", height=100)
 
 # 5. AI 생성 로직
 if st.button("인스타 감성 문구 생성하기 🚀", type="primary", use_container_width=True):
@@ -97,4 +97,5 @@ if st.button("인스타 감성 문구 생성하기 🚀"):
             raise
 
         
+
 
