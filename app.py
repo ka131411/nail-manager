@@ -1,6 +1,5 @@
 import streamlit as st
-import requests
-import json
+from google import genai
 
 # 1. 페이지 설정
 st.set_page_config(page_title="네일 매니저 AI", page_icon="💅")
@@ -46,26 +45,40 @@ if st.button("인스타 감성 문구 생성하기 🚀", type="primary", use_co
         5. 유입이 잘 되는 핵심 해시태그 7개를 마지막에 포함
         """
 
-        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
-        headers = {'Content-Type': 'application/json'}
-        data = {"contents": [{"parts": [{"text": prompt}]}]}
+       with st.spinner("AI가 감성 충전 중입니다... 💖"):
+    try:
+        # 1️⃣ Gemini 클라이언트 생성
+        client = genai.Client(api_key=api_key)
 
-        with st.spinner("사장님의 감성을 AI가 열공하는 중... ✍️"):
-            try:
-                response = requests.post(url, headers=headers, json=data)
-                if response.status_code == 200:
-                    result = response.json()
-                    final_text = result['candidates'][0]['content']['parts'][0]['text']
-                    
-                    st.success("작성 완료! 아래 박스 오른쪽 위의 버튼을 눌러 복사하세요! 👇")
-                    # 복사하기 편하도록 st.code 사용
-                    st.code(final_text, language=None)
-                else:
-                    st.error("구글 서버가 잠시 바쁘네요. 10초 뒤에 다시 시도해주세요!")
-            except Exception as e:
-                st.error("연결 중 문제가 생겼어요. 새로고침 후 다시 해주세요!")
+        # 2️⃣ 사용 가능한 Flash 모델 자동 선택
+        model_name = None
+        models = [m.name for m in client.models.list()]
 
-# 하단 정보
-st.markdown("---")
-st.caption("© 2026 유니픽스 네일 매니저 AI | 피드백은 언제나 환영입니다! ✨")
+        for name in [
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-flash-002",
+            "gemini-2.0-flash"
+        ]:
+            if name in models:
+                model_name = name
+                break
 
+        if not model_name:
+            raise RuntimeError(f"사용 가능한 Flash 모델이 없습니다. 현재 모델: {models}")
+
+        # 3️⃣ 콘텐츠 생성
+        response = client.models.generate_content(
+            model=model_name,
+            contents=prompt
+        )
+
+        text = response.text
+
+        st.success("작성 완료! 오른쪽 위 아이콘을 눌러 복사하세요 👇")
+        st.code(text, language=None)
+
+    except Exception as e:
+        st.error("❌ Gemini 호출 중 오류가 발생했습니다.")
+        st.code(str(e))
+        raise
