@@ -45,40 +45,56 @@ if st.button("인스타 감성 문구 생성하기 🚀", type="primary", use_co
         5. 유입이 잘 되는 핵심 해시태그 7개를 마지막에 포함
         """
 
-       with st.spinner("AI가 감성 충전 중입니다... 💖"):
-    try:
-        # 1️⃣ Gemini 클라이언트 생성
-        client = genai.Client(api_key=api_key)
+      # 버튼 클릭 시 실행 (예: if st.button(...) 아래에 넣으세요)
+if st.button("인스타 감성 문구 생성하기 🚀"):
+    if not api_key:
+        st.error("API 키를 먼저 입력해주세요.")
+        st.stop()
 
-        # 2️⃣ 사용 가능한 Flash 모델 자동 선택
-        model_name = None
-        models = [m.name for m in client.models.list()]
+    prompt = f"""
+당신은 네일샵 인스타그램 마케터입니다.
+아래 정보를 바탕으로 인스타 감성 문구를 작성하세요.
 
-        for name in [
-            "gemini-1.5-flash",
-            "gemini-1.5-flash-latest",
-            "gemini-1.5-flash-002",
-            "gemini-2.0-flash"
-        ]:
-            if name in models:
-                model_name = name
-                break
+[디자인 키워드]
+{design_keyword}
 
-        if not model_name:
-            raise RuntimeError(f"사용 가능한 Flash 모델이 없습니다. 현재 모델: {models}")
+[강조할 점]
+{highlight_point}
+""".strip()
 
-        # 3️⃣ 콘텐츠 생성
-        response = client.models.generate_content(
-            model=model_name,
-            contents=prompt
-        )
+    with st.spinner("AI가 감성 충전 중입니다... 💖"):
+        try:
+            client = genai.Client(api_key=api_key)
 
-        text = response.text
+            # Flash 모델 자동 선택
+            model_name = None
+            models = [m.name for m in client.models.list()]
+            for name in [
+                "gemini-1.5-flash",
+                "gemini-1.5-flash-latest",
+                "gemini-1.5-flash-002",
+                "gemini-2.0-flash",
+            ]:
+                if name in models:
+                    model_name = name
+                    break
 
-        st.success("작성 완료! 오른쪽 위 아이콘을 눌러 복사하세요 👇")
-        st.code(text, language=None)
+            if not model_name:
+                raise RuntimeError(f"사용 가능한 Flash 모델이 없습니다. 현재 모델: {models}")
 
-    except Exception as e:
-        st.error("❌ Gemini 호출 중 오류가 발생했습니다.")
-        st.code(str(e))
-        raise
+            resp = client.models.generate_content(
+                model=model_name,
+                contents=prompt
+            )
+
+            text = resp.text or ""
+            st.success("작성 완료! 오른쪽 위 아이콘을 눌러 복사하세요 👇")
+            st.code(text, language=None)
+
+        except Exception as e:
+            st.error("❌ Gemini 호출 중 오류가 발생했습니다.")
+            st.code(str(e))
+            raise
+
+        
+
